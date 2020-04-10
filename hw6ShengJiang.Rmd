@@ -1,0 +1,251 @@
+---
+title: "KobeBryantShotSelection"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, warning=FALSE}
+url <- "https://static.basketrevolution.es/media/wysiwyg/players/header/Kobe-Bryant-Header.jpg"
+```
+## Kobe Bryant Shot Selection 
+<center><img src="`r url`"></center>
+
+
+```{r, warning=FALSE}
+# Load libraries
+library(tidyverse)
+library(gridExtra)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+```
+
+
+
+```{r, warning=FALSE}
+shots<-read_csv("/Users/JS/Documents/IE6600/HW/shots.csv")
+
+```
+```{r, warning=FALSE}
+head(shots)
+shots<-na.omit(shots)
+```
+```{r, warning=FALSE}
+theme_black = function(base_size = 12, base_family = "") {
+  
+  theme_grey(base_size = base_size, base_family = base_family) %+replace%
+    
+    theme(
+      # Specify axis options
+      axis.line = element_blank(),  
+      axis.text.x = element_text(size = base_size*0.8, color = "white", lineheight = 0.9),  
+      axis.text.y = element_text(size = base_size*0.8, color = "white", lineheight = 0.9),  
+      axis.ticks = element_line(color = "white", size  =  0.2),  
+      axis.title.x = element_text(size = base_size, color = "white", margin = margin(0, 10, 0, 0)),  
+      axis.title.y = element_text(size = base_size, color = "white", angle = 90, margin = margin(0, 10, 0, 0)),  
+      axis.ticks.length = unit(0.3, "lines"),   
+      # Specify legend options
+      legend.background = element_rect(color = NA, fill = NA),  
+      legend.key = element_rect(color = "white",  fill = "black"),  
+      legend.key.size = unit(1.2, "lines"),  
+      legend.key.height = NULL,  
+      legend.key.width = NULL,      
+      legend.text = element_text(size = base_size*0.8, color = "white"),  
+      legend.title = element_text(size = base_size*0.8, face = "bold", hjust = 0, color = "white"),  
+      legend.position = "right",  
+      legend.text.align = NULL,  
+      legend.title.align = NULL,  
+      legend.direction = "vertical",  
+      legend.box = NULL, 
+      # Specify panel options
+      panel.background = element_rect(fill = "black", color  =  NA),  
+      panel.border = element_rect(fill = NA, color = "white"),  
+      panel.grid.major = element_line(color = "grey35"),  
+      panel.grid.minor = element_line(color = "grey20"),  
+      panel.margin = unit(0.5, "lines"),   
+      # Specify facetting options
+      strip.background = element_rect(fill = "grey30", color = "grey10"),  
+      strip.text.x = element_text(size = base_size*0.8, color = "white"),  
+      strip.text.y = element_text(size = base_size*0.8, color = "white",angle = -90),  
+      # Specify plot options
+      plot.background = element_rect(color = "black", fill = "black"),  
+      plot.title = element_text(size = base_size*1.2, color = "white"),  
+      plot.margin = unit(rep(1, 4), "lines")
+      
+    )
+  
+}
+```
+
+
+```{r, warning=FALSE}
+JumpShot<-shots %>% filter(combined_shot_type=="Jump Shot")
+BankShot<-shots %>% filter(combined_shot_type=="Bank Shot")
+Dunk<-shots %>% filter(combined_shot_type=="Dunk")
+HookShot<-shots %>% filter(combined_shot_type=="Hook Shot")
+Layup<-shots %>% filter(combined_shot_type=="Layup")
+TipShot<-shots %>% filter(combined_shot_type=="Tip Shot")
+  
+```
+
+```{r, warning=FALSE}
+shottype<- c("JumpShot" = "#751aff", "BankShot" = "#cc6600", "Dunk" = "#ffcc00","HookShot"="#ccff66","Layup"="#ffff66","TipShot"="#ECB602")
+```
+
+```{r, warning=FALSE}
+p1<-ggplot()+geom_tile(data=JumpShot,
+            aes(x=lon, y=lat,fill="JumpShot"),alpha=0.5)
+
+p2<-p1+geom_tile(data=BankShot,aes(x=lon, y=lat,fill="BankShot"))
+p3<-p2+geom_tile(data=Dunk,aes(x=lon, y=lat,fill="Dunk"))
+p4<-p3+geom_tile(data=HookShot,aes(x=lon, y=lat,fill="HookShot"))
+p5<-p4+geom_tile(data=Layup,aes(x=lon, y=lat,fill="Layup"))
+p6<-p5+geom_tile(data=TipShot,aes(x=lon, y=lat,fill="TipShot"))
+
+
+p6+
+  labs(title="Shot type",fill="Shot Type") +
+  ylim(c(33.7, 34.0883)) +
+  scale_fill_manual(values=shottype)+
+  theme_black() +
+  theme(legend.title=element_blank(),
+        plot.title=element_text(hjust=0.5),
+        # Remove panel border
+  panel.border = element_blank(),  
+  # Remove panel grid lines
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  # Remove panel background
+  
+  # Add axis line
+  axis.line = element_blank(),
+  axis.text = element_blank(),
+  axis.ticks = element_blank(),
+  axis.title = element_blank()
+  )
+
+  
+```
+
+
+
+
+
+
+
+
+
+
+```{r, warning=FALSE}
+shots %>% group_by(seconds_remaining) %>% summarize(Accuracy=mean(shot_made_flag)) %>% 
+  plot_ly(
+x = ~seconds_remaining, y = ~Accuracy,
+color = ~seconds_remaining, size = ~seconds_remaining) %>% 
+  layout(plot_bgcolor="#000000",
+         paper_bgcolor="#000000",
+         title = 'Killer Instinct In Final Seconds',
+         xaxis = list(title = 'Seconds Remaining'),
+         yaxis = list(title = 'Accuracy' )) 
+```
+
+```{r, warning=FALSE}
+library(forecast)
+```
+
+
+
+
+```{r, warning=FALSE}
+shots %>%
+  group_by(season,period) %>% 
+  summarize(Accuracy=mean(shot_made_flag)) %>% 
+   plot_ly(
+x = ~period, y = ~Accuracy,type='scatter',mode='lines',
+color = ~season) %>% 
+  layout(plot_bgcolor="#000000",
+         paper_bgcolor="#000000",
+         title = 'Accuracy In Different Periods Over Seasons',
+         xaxis = list(title = 'Game Period'),
+         yaxis = list(title = 'Accuracy' )) 
+ 
+ 
+```
+```{r, warning=FALSE}
+accuracybasic<-shots %>%
+  group_by(shot_zone_basic) %>% summarize(Accuracy=mean(shot_made_flag)) %>% 
+plot_ly(x = ~fct_infreq(shot_zone_basic), y= ~Accuracy,type='bar',mode='lines'
+) %>% 
+  layout(plot_bgcolor="#000000",
+         paper_bgcolor="#000000",
+         title = 'Accuracy In Different Zone Area',
+         xaxis = list(title = 'Shot Zone Area'),
+         yaxis = list(title = 'Accuracy' )) 
+
+
+fbasic <- ggplot(shots, aes(x=shot_zone_basic)) + 
+  geom_bar(aes(fill=shot_zone_basic)) +
+  labs(y="Frequency") +
+  theme_black() +
+  theme(axis.text.x=element_text(size=6.3,angle=45),
+        axis.title.x=element_blank(), 
+        legend.position="none")
+
+
+subplot(accuracybasic, fbasic,titleY = TRUE,titleX=FALSE,shareY = FALSE ,nrows = 2, margin = 0.04, heights = c(0.6, 0.4)) 
+
+
+```
+
+```{r, warning=FALSE}
+accuracyrange<-shots %>%
+  group_by(shot_zone_range) %>% summarize(Accuracy=mean(shot_made_flag)) %>% 
+  plot_ly(x = ~shot_zone_range, y= ~Accuracy,type='bar',mode='lines'
+) %>% 
+  layout(plot_bgcolor="#000000",
+         paper_bgcolor="#000000",
+         title = 'Accuracy In Different Zone Range',
+         xaxis = list(title = 'Shot Zone Range'),
+         yaxis = list(title = 'Accuracy' ))
+
+frange <- ggplot(shots, aes(x=shot_zone_range)) + 
+  geom_bar(aes(fill=shot_zone_range)) +
+  labs(y="Frequency") +
+  theme_black() +
+  theme(axis.text.x=element_text(size=6.3,angle=45),
+        axis.title.x=element_blank(), 
+        legend.position="none")
+subplot(accuracyrange, frange,titleY = TRUE,shareY = FALSE, nrows = 2, margin = 0.04, heights = c(0.6, 0.4)) 
+
+
+```
+```{r, warning=FALSE}
+accuracyshottype<-shots %>% group_by(combined_shot_type) %>% summarize(Accuracy=mean(shot_made_flag)) %>% 
+  plot_ly(x = ~combined_shot_type, y= ~Accuracy,type='bar'
+) %>% 
+  layout(plot_bgcolor="#000000",
+         paper_bgcolor="#000000",
+         title = 'Accuracy In Different Shot Type',
+         xaxis = list(title = 'Shot Type'),
+         yaxis = list(title = 'Accuracy' ))
+
+ftype <- ggplot(shots, aes(x=combined_shot_type)) + 
+  geom_bar(aes(fill=combined_shot_type)) +
+  labs(y="Frequency") +
+  theme_black() +
+  theme(axis.text.x=element_text(size=6.3,angle=45),
+        axis.title.x=element_blank(), 
+        legend.position="none")
+subplot(accuracyshottype, ftype,titleY = TRUE,shareY = FALSE, nrows = 2, margin = 0.04, heights = c(0.6, 0.4)) 
+
+```
+
+
+
+
+
+
+
+
